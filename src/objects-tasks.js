@@ -46,7 +46,7 @@ function mergeObjects(arr) {
  * Removes a properties from an object.
  *
  * @param {Object} obj - The object from which to remove the property
- * @param {Array} keys - The keys of the properties to remove
+ * @param {string[]} keys - The keys of the properties to remove
  * @return {Object} - The object with the specified key removed
  *
  * @example
@@ -198,7 +198,7 @@ function Rectangle(w, h) {
 /**
  * Returns the JSON representation of specified object
  *
- * @param {object} obj
+ * @param {Object} obj
  * @return {string}
  *
  * @example
@@ -214,7 +214,7 @@ function getJSON(obj) {
  *
  * @param {Object} proto
  * @param {string} json
- * @return {object}
+ * @return {Object}
  *
  * @example
  *    const r = fromJSON(Circle.prototype, '{"radius":10}');
@@ -228,8 +228,13 @@ function fromJSON(proto, json) {
  * Sorts the specified array by country name first and city name
  * (if countries are equal) in ascending order.
  *
- * @param {array} arr
- * @return {array}
+ * @typedef {{
+ * country: string,
+ * city: string
+ * }} GeoEntity
+ *
+ * @param {GeoEntity[]} arr
+ * @return {GeoEntity[]}
  *
  * @example
  *    [
@@ -264,10 +269,15 @@ function sortCitiesArray(arr) {
  * and values extracted via valueSelector callback.
  * See: https://en.wikipedia.org/wiki/Multimap
  *
- * @param {array} array
- * @param {Function} keySelector
- * @param {Function} valueSelector
- * @return {Map}
+ * @typedef {{
+ * country: string,
+ * city: string
+ * }} GeoEntity
+ *
+ * @param {GeoEntity[]} array
+ * @param {(item: GeoEntity) => string} keySelector
+ * @param {(item: GeoEntity) => string} valueSelector
+ * @return {Map<string, string[]>}
  *
  * @example
  *   group([
