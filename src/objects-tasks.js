@@ -351,16 +351,21 @@ function group(array, keySelector, valueSelector) {
  *  For more examples see unit tests.
  */
 
-const cssSelectorBuilder = {
-  selector: {
-    element: '',
-    id: '',
-    class: '',
-    attr: '',
-    pseudoClass: '',
-    pseudoElement: '',
-    total: '',
-  },
+class CssSelector {
+  constructor(
+    selector = {
+      element: '',
+      id: '',
+      class: '',
+      attr: '',
+      pseudoClass: '',
+      pseudoElement: '',
+      total: '',
+    }
+  ) {
+    this.selector = { ...selector };
+  }
+
   element(value) {
     if (this.selector.element !== '') {
       throw new Error(
@@ -381,8 +386,8 @@ const cssSelectorBuilder = {
 
     const newSelector = { ...this.selector };
     newSelector.element = value;
-    return { ...this, selector: newSelector };
-  },
+    return new CssSelector(newSelector);
+  }
 
   id(value) {
     if (this.selector.id !== '') {
@@ -403,8 +408,8 @@ const cssSelectorBuilder = {
 
     const newSelector = { ...this.selector };
     newSelector.id = `#${value}`;
-    return { ...this, selector: newSelector };
-  },
+    return new CssSelector(newSelector);
+  }
 
   class(value) {
     if (
@@ -425,8 +430,8 @@ const cssSelectorBuilder = {
       newSelector.class = `.${value}`;
     }
 
-    return { ...this, selector: newSelector };
-  },
+    return new CssSelector(newSelector);
+  }
 
   attr(value) {
     if (
@@ -443,8 +448,8 @@ const cssSelectorBuilder = {
     } else {
       newSelector.attr = `[${value}]`;
     }
-    return { ...this, selector: newSelector };
-  },
+    return new CssSelector(newSelector);
+  }
 
   pseudoClass(value) {
     if (this.selector.pseudoElement !== '') {
@@ -459,8 +464,8 @@ const cssSelectorBuilder = {
     } else {
       newSelector.pseudoClass = `:${value}`;
     }
-    return { ...this, selector: newSelector };
-  },
+    return new CssSelector(newSelector);
+  }
 
   pseudoElement(value) {
     if (this.selector.pseudoElement !== '') {
@@ -470,19 +475,43 @@ const cssSelectorBuilder = {
     }
     const newSelector = { ...this.selector };
     newSelector.pseudoElement = `::${value}`;
-    return { ...this, selector: newSelector };
-  },
+    return new CssSelector(newSelector);
+  }
 
   combine(selector1, combinator, selector2) {
     const newSelector = { ...this.selector };
     const selector1x = Object.values(selector1.selector).join('');
     const selector2x = Object.values(selector2.selector).join('');
     newSelector.total = `${selector1x} ${combinator} ${selector2x}`;
-    return { ...this, selector: newSelector };
-  },
+    return new CssSelector(newSelector);
+  }
 
   stringify() {
     return Object.values(this.selector).join('');
+  }
+}
+
+const cssSelectorBuilder = {
+  element(value) {
+    return new CssSelector().element(value);
+  },
+  id(value) {
+    return new CssSelector().id(value);
+  },
+  class(value) {
+    return new CssSelector().class(value);
+  },
+  attr(value) {
+    return new CssSelector().attr(value);
+  },
+  pseudoClass(value) {
+    return new CssSelector().pseudoClass(value);
+  },
+  pseudoElement(value) {
+    return new CssSelector().pseudoElement(value);
+  },
+  combine(selector1, combinator, selector2) {
+    return new CssSelector().combine(selector1, combinator, selector2);
   },
 };
 
