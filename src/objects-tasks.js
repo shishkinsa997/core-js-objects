@@ -352,32 +352,137 @@ function group(array, keySelector, valueSelector) {
  */
 
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  selector: {
+    element: '',
+    id: '',
+    class: '',
+    attr: '',
+    pseudoClass: '',
+    pseudoElement: '',
+    total: '',
+  },
+  element(value) {
+    if (this.selector.element !== '') {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    }
+    if (
+      this.selector.id !== '' ||
+      this.selector.class !== '' ||
+      this.selector.attr !== '' ||
+      this.selector.pseudoElement !== '' ||
+      this.selector.pseudoClass !== ''
+    ) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+
+    const newSelector = { ...this.selector };
+    newSelector.element = value;
+    return { ...this, selector: newSelector };
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    if (this.selector.id !== '') {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    }
+    if (
+      this.selector.class !== '' ||
+      this.selector.attr !== '' ||
+      this.selector.pseudoElement !== '' ||
+      this.selector.pseudoClass !== ''
+    ) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+
+    const newSelector = { ...this.selector };
+    newSelector.id = `#${value}`;
+    return { ...this, selector: newSelector };
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    if (
+      this.selector.attr !== '' ||
+      this.selector.pseudoElement !== '' ||
+      this.selector.pseudoClass !== ''
+    ) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+
+    const newSelector = { ...this.selector };
+
+    if (this.selector.class !== '') {
+      newSelector.class = `${this.selector.class}.${value}`;
+    } else {
+      newSelector.class = `.${value}`;
+    }
+
+    return { ...this, selector: newSelector };
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    if (
+      this.selector.pseudoElement !== '' ||
+      this.selector.pseudoClass !== ''
+    ) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+    const newSelector = { ...this.selector };
+    if (this.selector.attr !== '') {
+      newSelector.attr = `${this.selector.attr}[${value}]`;
+    } else {
+      newSelector.attr = `[${value}]`;
+    }
+    return { ...this, selector: newSelector };
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    if (this.selector.pseudoElement !== '') {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+
+    const newSelector = { ...this.selector };
+    if (this.selector.pseudoClass !== '') {
+      newSelector.pseudoClass = `${this.selector.pseudoClass}:${value}`;
+    } else {
+      newSelector.pseudoClass = `:${value}`;
+    }
+    return { ...this, selector: newSelector };
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    if (this.selector.pseudoElement !== '') {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    }
+    const newSelector = { ...this.selector };
+    newSelector.pseudoElement = `::${value}`;
+    return { ...this, selector: newSelector };
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    const newSelector = { ...this.selector };
+    const selector1x = Object.values(selector1.selector).join('');
+    const selector2x = Object.values(selector2.selector).join('');
+    newSelector.total = `${selector1x} ${combinator} ${selector2x}`;
+    return { ...this, selector: newSelector };
+  },
+
+  stringify() {
+    return Object.values(this.selector).join('');
   },
 };
 
