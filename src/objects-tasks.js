@@ -362,7 +362,7 @@ function group(array, keySelector, valueSelector) {
  */
 
 const UNIQUE_ERROR =
-  'Element, id and pseudo-element should not occur more then one time inside the selector';
+  'Element, id and pseudo-element should not occur more than one time inside the selector';
 
 const ORDER_ERROR =
   'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element';
