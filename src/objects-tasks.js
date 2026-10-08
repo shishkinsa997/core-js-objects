@@ -351,143 +351,87 @@ function group(array, keySelector, valueSelector) {
  *  For more examples see unit tests.
  */
 
+const UNIQUE_ERROR =
+  'Element, id and pseudo-element should not occur more then one time inside the selector';
+
+const ORDER_ERROR =
+  'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element';
+
+const ORDER = {
+  element: 1,
+  id: 2,
+  class: 3,
+  attr: 4,
+  pseudoClass: 5,
+  pseudoElement: 6,
+};
+
+const UNIQUE_PARTS = new Set(['element', 'id', 'pseudoElement']);
+const COMBINATORS = new Set([' ', '+', '~', '>']);
+
 class CssSelector {
-  constructor(
-    selector = {
-      element: '',
-      id: '',
-      class: '',
-      attr: '',
-      pseudoClass: '',
-      pseudoElement: '',
-      total: '',
+  constructor(parts = [], lastOrder = 0, usedUnique = new Set()) {
+    this.parts = parts;
+    this.lastOrder = lastOrder;
+    this.usedUnique = usedUnique;
+  }
+
+  add(type, text) {
+    if (UNIQUE_PARTS.has(type) && this.usedUnique.has(type)) {
+      throw new Error(UNIQUE_ERROR);
     }
-  ) {
-    this.selector = { ...selector };
+
+    const order = ORDER[type];
+
+    if (order < this.lastOrder) {
+      throw new Error(ORDER_ERROR);
+    }
+
+    const nextUnique = new Set(this.usedUnique);
+    if (UNIQUE_PARTS.has(type)) {
+      nextUnique.add(type);
+    }
+
+    return new CssSelector([...this.parts, text], order, nextUnique);
   }
 
   element(value) {
-    if (this.selector.element !== '') {
-      throw new Error(
-        'Element, id and pseudo-element should not occur more then one time inside the selector'
-      );
-    }
-    if (
-      this.selector.id !== '' ||
-      this.selector.class !== '' ||
-      this.selector.attr !== '' ||
-      this.selector.pseudoElement !== '' ||
-      this.selector.pseudoClass !== ''
-    ) {
-      throw new Error(
-        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
-      );
-    }
-
-    const newSelector = { ...this.selector };
-    newSelector.element = value;
-    return new CssSelector(newSelector);
+    return this.add('element', value);
   }
 
   id(value) {
-    if (this.selector.id !== '') {
-      throw new Error(
-        'Element, id and pseudo-element should not occur more then one time inside the selector'
-      );
-    }
-    if (
-      this.selector.class !== '' ||
-      this.selector.attr !== '' ||
-      this.selector.pseudoElement !== '' ||
-      this.selector.pseudoClass !== ''
-    ) {
-      throw new Error(
-        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
-      );
-    }
-
-    const newSelector = { ...this.selector };
-    newSelector.id = `#${value}`;
-    return new CssSelector(newSelector);
+    return this.add('id', `#${value}`);
   }
 
   class(value) {
-    if (
-      this.selector.attr !== '' ||
-      this.selector.pseudoElement !== '' ||
-      this.selector.pseudoClass !== ''
-    ) {
-      throw new Error(
-        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
-      );
-    }
-
-    const newSelector = { ...this.selector };
-
-    if (this.selector.class !== '') {
-      newSelector.class = `${this.selector.class}.${value}`;
-    } else {
-      newSelector.class = `.${value}`;
-    }
-
-    return new CssSelector(newSelector);
+    return this.add('class', `.${value}`);
   }
 
   attr(value) {
-    if (
-      this.selector.pseudoElement !== '' ||
-      this.selector.pseudoClass !== ''
-    ) {
-      throw new Error(
-        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
-      );
-    }
-    const newSelector = { ...this.selector };
-    if (this.selector.attr !== '') {
-      newSelector.attr = `${this.selector.attr}[${value}]`;
-    } else {
-      newSelector.attr = `[${value}]`;
-    }
-    return new CssSelector(newSelector);
+    return this.add('attr', `[${value}]`);
   }
 
   pseudoClass(value) {
-    if (this.selector.pseudoElement !== '') {
-      throw new Error(
-        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
-      );
-    }
-
-    const newSelector = { ...this.selector };
-    if (this.selector.pseudoClass !== '') {
-      newSelector.pseudoClass = `${this.selector.pseudoClass}:${value}`;
-    } else {
-      newSelector.pseudoClass = `:${value}`;
-    }
-    return new CssSelector(newSelector);
+    return this.add('pseudoClass', `:${value}`);
   }
 
   pseudoElement(value) {
-    if (this.selector.pseudoElement !== '') {
-      throw new Error(
-        'Element, id and pseudo-element should not occur more then one time inside the selector'
-      );
-    }
-    const newSelector = { ...this.selector };
-    newSelector.pseudoElement = `::${value}`;
-    return new CssSelector(newSelector);
+    return this.add('pseudoElement', `::${value}`);
   }
 
-  combine(selector1, combinator, selector2) {
-    const newSelector = { ...this.selector };
-    const selector1x = Object.values(selector1.selector).join('');
-    const selector2x = Object.values(selector2.selector).join('');
-    newSelector.total = `${selector1x} ${combinator} ${selector2x}`;
-    return new CssSelector(newSelector);
+  combine(combinator, other) {
+    if (!COMBINATORS.has(combinator)) {
+      throw new Error('Invalid combinator');
+    }
+
+    const text = `${this.stringify()} ${combinator} ${other.stringify()}`;
+    const lockedUnique = new Set(UNIQUE_PARTS);
+
+    return new CssSelector([text], 6, lockedUnique);
   }
 
   stringify() {
-    return Object.values(this.selector).join('');
+    return this.parts.join('');
   }
 }
 
@@ -495,23 +439,29 @@ const cssSelectorBuilder = {
   element(value) {
     return new CssSelector().element(value);
   },
+
   id(value) {
     return new CssSelector().id(value);
   },
+
   class(value) {
     return new CssSelector().class(value);
   },
+
   attr(value) {
     return new CssSelector().attr(value);
   },
+
   pseudoClass(value) {
     return new CssSelector().pseudoClass(value);
   },
+
   pseudoElement(value) {
     return new CssSelector().pseudoElement(value);
   },
+
   combine(selector1, combinator, selector2) {
-    return new CssSelector().combine(selector1, combinator, selector2);
+    return selector1.combine(combinator, selector2);
   },
 };
 
